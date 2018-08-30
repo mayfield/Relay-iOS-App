@@ -1857,9 +1857,9 @@ typedef enum : NSUInteger {
                         DDLogError(@"%@ Unexpected request to reset session in group thread. Refusing", self.logTag);
                         return;
                     }
-                    [OWSSessionResetJob runWithThread:self.thread
-                                        messageSender:self.messageSender
-                                       primaryStorage:self.primaryStorage];
+                    [SessionResetJob runWithThread:self.thread
+                                     messageSender:self.messageSender
+                                    primaryStorage:self.primaryStorage];
                 }];
     [alertController addAction:resetSessionAction];
 
