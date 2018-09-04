@@ -20,42 +20,15 @@
 #import "SignalApp.h"
 #import "SignalsNavigationController.h"
 #import "ViewControllerUtils.h"
-#import <AxolotlKit/SessionCipher.h>
-#import <PromiseKit/AnyPromise.h>
-#import <RelayMessaging/AppSetup.h>
-#import <RelayMessaging/Environment.h>
-#import <RelayMessaging/OWSContactsManager.h>
-#import <RelayMessaging/OWSMath.h>
-#import <RelayMessaging/OWSNavigationController.h>
-#import <RelayMessaging/OWSPreferences.h>
-#import <RelayMessaging/OWSProfileManager.h>
-#import <RelayMessaging/Release.h>
-#import <RelayMessaging/RelayMessaging.h>
-#import <RelayMessaging/VersionMigrations.h>
-#import <RelayServiceKit/AppReadiness.h>
-#import <RelayServiceKit/NSUserDefaults+OWS.h>
-#import <RelayServiceKit/OWS2FAManager.h>
-#import <RelayServiceKit/OWSBatchMessageProcessor.h>
-#import <RelayServiceKit/OWSDisappearingMessagesJob.h>
-#import <RelayServiceKit/OWSFailedAttachmentDownloadsJob.h>
-#import <RelayServiceKit/OWSFailedMessagesJob.h>
-#import <RelayServiceKit/OWSIncompleteCallsJob.h>
-#import <RelayServiceKit/OWSMessageManager.h>
-#import <RelayServiceKit/OWSMessageSender.h>
-#import <RelayServiceKit/OWSOrphanedDataCleaner.h>
-#import <RelayServiceKit/OWSPrimaryStorage+Calling.h>
-#import <RelayServiceKit/OWSReadReceiptManager.h>
-#import <RelayServiceKit/TSAccountManager.h>
-#import <RelayServiceKit/TSDatabaseView.h>
-#import <RelayServiceKit/TSPreKeyManager.h>
-#import <RelayServiceKit/TSSocketManager.h>
-#import <RelayServiceKit/TextSecureKitEnv.h>
-#import <YapDatabase/YapDatabaseCryptoUtils.h>
 #import <sys/sysctl.h>
 
 @import WebRTC;
 @import Intents;
 @import RelayServiceKit;
+@import YapDatabase;
+@import RelayMessaging;
+@import AxolotlKit;
+@import PromiseKit;
 
 NSString *const AppDelegateStoryboardMain = @"Main";
 
@@ -1025,9 +998,9 @@ static NSTimeInterval launchStartedAt;
     OWSAssertIsOnMainThread();
 
     // App isn't ready until storage is ready AND all version migrations are complete.
-    if (!self.areVersionMigrationsComplete) {
-        return;
-    }
+//    if (!self.areVersionMigrationsComplete) {
+//        return;
+//    }
     if (![OWSStorage isStorageReady]) {
         return;
     }
@@ -1131,7 +1104,7 @@ static NSTimeInterval launchStartedAt;
         [[OWSProfileManager sharedManager] ensureLocalProfileCached];
 
         // For non-legacy users, read receipts are on by default.
-        [OWSReadReceiptManager.sharedManager setAreReadReceiptsEnabled:YES];
+        [OWSReadReceiptManager.sharedManager setAreReadReceiptsEnabled:NO];
     }
 }
 

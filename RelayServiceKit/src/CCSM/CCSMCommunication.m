@@ -16,10 +16,7 @@
 #import "TSPreKeyManager.h"
 #import "AFNetworking.h"
 #import "FLDeviceRegistrationService.h"
-//#import "SignalApp.h"
-
-// TODO: migrate away from this:
-//#import "HttpRequest.h"
+#import <RelayServiceKit/RelayServiceKit-Swift.h>
 
 
 #define FLTagMathPath @"/v1/directory/user/"
@@ -386,6 +383,7 @@
     if (payload) {
         NSDictionary *userDict = [payload objectForKey:@"user"];
         NSString *userID = [userDict objectForKey:@"id"];
+        TSAccountManager.sharedInstance.phoneNumberAwaitingVerification = userID;
         // Check to see if user changed.  If so, wiped the database.
         if ([TSAccountManager localUID].length > 0 &&
             ![[TSAccountManager localUID] isEqualToString:userID]) {
@@ -401,9 +399,7 @@
         [CCSMStorage.sharedInstance setSessionToken:[payload objectForKey:@"token"]];
         
         [CCSMStorage.sharedInstance setUserInfo:userDict];
-        // TODO: Bring this in
-//        [SignalRecipient getOrCreateRecipientWithUserDictionary:userDict];
-//        [TSAccountManager.sharedInstance myself];
+        [RelayRecipient getOrCreateRecipientWithUserDictionary:userDict];
         
         NSDictionary *orgDict = [userDict objectForKey:@"org"];
         [CCSMStorage.sharedInstance setOrgInfo:orgDict];
