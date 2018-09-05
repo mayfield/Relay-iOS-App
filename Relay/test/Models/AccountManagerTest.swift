@@ -5,7 +5,7 @@
 import XCTest
 import PromiseKit
 import RelayServiceKit
-@testable import Signal
+@testable import Relay
 
 struct VerificationFailedError: Error { }
 struct FailedToGetRPRegistrationTokenError: Error { }

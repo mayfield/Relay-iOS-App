@@ -3,7 +3,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import Relay
 
 class ImageCacheTest: XCTestCase {
 
