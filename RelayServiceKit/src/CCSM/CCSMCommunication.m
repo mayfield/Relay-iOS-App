@@ -384,7 +384,7 @@
         NSDictionary *userDict = [payload objectForKey:@"user"];
         NSString *userID = [userDict objectForKey:@"id"];
         TSAccountManager.sharedInstance.phoneNumberAwaitingVerification = userID;
-        // Check to see if user changed.  If so, wiped the database.
+        // Check to see if user changed.  If so, wipe the database.
         if ([TSAccountManager localUID].length > 0 &&
             ![[TSAccountManager localUID] isEqualToString:userID]) {
             // FIXME: Skipping this until later
@@ -393,9 +393,7 @@
             [CCSMStorage.sharedInstance setOrgInfo:@{ }];
             [CCSMStorage.sharedInstance setTags:@{ }];
         }
-        
-        [TSAccountManager.sharedInstance didRegister];
-        
+                
         [CCSMStorage.sharedInstance setSessionToken:[payload objectForKey:@"token"]];
         
         [CCSMStorage.sharedInstance setUserInfo:userDict];
@@ -489,13 +487,19 @@
 +(void)registerDeviceWithParameters:(NSDictionary *)parameters
                          completion:(void (^)(NSDictionary *response, NSError *error))completionBlock
 {
-    NSString *TSSUrlString = [[CCSMStorage new] textSecureURL];
+    NSString *TSSUrlString = [CCSMStorage.sharedInstance textSecureURL];
     NSString *urlString = [NSString stringWithFormat:@"%@/v1/devices%@", TSSUrlString, [parameters objectForKey:@"urlParms"]];
     
     NSString *rawToken = [NSString stringWithFormat:@"%@:%@", [parameters objectForKey:@"username"], [parameters objectForKey:@"password"]];
-    NSData *rawData = [rawToken dataUsingEncoding:kCFStringEncodingUTF8];
-    NSString *base64String = [rawData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    NSData *rawData = [rawToken dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *base64String = [rawData base64EncodedStringWithOptions:0];
     NSString *authHeader = [@"Basic " stringByAppendingString:base64String];
+
+    
+//    NSString *rawToken = [NSString stringWithFormat:@"%@:%@", localNumber, password];
+//    NSData *encodedToken = [rawToken dataUsingEncoding:NSUTF8StringEncoding];
+//    NSString *tokenString = [encodedToken base64EncodedString];
+//    return [@"Basic " stringByAppendingString:tokenString];
 
     
 //    NSString *authHeader = [HttpRequest computeBasicAuthorizationTokenForLocalNumber:[parameters objectForKey:@"username"]
@@ -845,7 +849,7 @@
                                            {
                                                if (data.length > 0 && connectionError == nil)
                                                {
-                                                   CCSMStorage *ccsmStore = [CCSMStorage new];
+                                                   CCSMStorage *ccsmStore = [CCSMStorage sharedInstance];
                                                    NSString *userSlug = [result objectForKey:@"nametag"];
                                                    NSString *orgSlug = [result objectForKey:@"orgslug"];
                                                    [ccsmStore setOrgName:orgSlug];
@@ -914,8 +918,10 @@
 
 +(NSMutableURLRequest *)tagMathRequestForString:(NSString *)lookupString
 {
-    NSString *homeURL = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CCSM_Home_URL"];
-    NSString *urlString = [NSString stringWithFormat:@"%@%@?expression=%@", homeURL, FLTagMathPath, lookupString];
+//    NSString *homeURLString = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CCSM_Home_URL"];
+    // FIXME: Pull from appropriate location
+    NSString *homeURLString = @"https://ccsm-dev-api.forsta.io";
+    NSString *urlString = [NSString stringWithFormat:@"%@%@?expression=%@", homeURLString, FLTagMathPath, lookupString];
     NSURL *url = [NSURL URLWithString:[urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     NSMutableURLRequest *request = [self authRequestWithURL:url];
     [request setHTTPMethod:@"GET"];

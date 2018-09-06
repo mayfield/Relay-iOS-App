@@ -244,6 +244,7 @@ class ValidationViewController: UITableViewController {
             FLDeviceRegistrationService.sharedInstance().registerWithTSS { error in
                 if error == nil {
                     // Success!
+                    TSAccountManager.sharedInstance().finalizeRegistration()
                     self.proceedToMain()
                 } else {
                     let err = error! as NSError
@@ -274,6 +275,7 @@ class ValidationViewController: UITableViewController {
                                                                                                 FLDeviceRegistrationService.sharedInstance().forceRegistration(completion: { provisionError in
                                                                                                     if provisionError == nil {
                                                                                                         Logger.info("Force registration successful.")
+                                                                                                        TSAccountManager.sharedInstance().finalizeRegistration()
                                                                                                         self.proceedToMain()
                                                                                                     } else {
                                                                                                         Logger.error("Force registration failed with error: \(String(describing: provisionError?.localizedDescription))");
