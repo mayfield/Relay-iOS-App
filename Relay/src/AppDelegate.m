@@ -5,7 +5,6 @@
 #import "AppDelegate.h"
 #import "AppStoreRating.h"
 #import "AppUpdateNag.h"
-#import "CodeVerificationViewController.h"
 #import "DebugLogger.h"
 #import "HomeViewController.h"
 #import "MainAppContext.h"
@@ -15,7 +14,6 @@
 #import "OWSScreenLockUI.h"
 #import "Pastelog.h"
 #import "PushManager.h"
-#import "RegistrationViewController.h"
 #import "Relay-Swift.h"
 #import "SignalApp.h"
 #import "SignalsNavigationController.h"
@@ -233,6 +231,10 @@ static NSTimeInterval launchStartedAt;
 
 - (BOOL)ensureIsReadyForAppExtensions
 {
+    // Forsta additions
+    CCSMEnvironment.sharedInstance.appGroupIdString = ApplicationGroup;
+    CCSMEnvironment.sharedInstance.ccsmURLString = FLHomeURL;
+    
     // Given how sensitive this migration is, we verbosely
     // log the contents of all involved paths before and after.
     //
@@ -482,10 +484,10 @@ static NSTimeInterval launchStartedAt;
             if ([signupController isKindOfClass:[OWSNavigationController class]]) {
                 OWSNavigationController *navController = (OWSNavigationController *)signupController;
                 UIViewController *controller = [navController.childViewControllers lastObject];
-                if ([controller isKindOfClass:[CodeVerificationViewController class]]) {
-                    CodeVerificationViewController *cvvc = (CodeVerificationViewController *)controller;
-                    NSString *verificationCode           = [url.path substringFromIndex:1];
-                    [cvvc setVerificationCodeAndTryToVerify:verificationCode];
+                if ([controller isKindOfClass:[ValidationViewController class]]) {
+//                    ValidationViewContrmarkoller *cvvc = (ValidationViewController *)controller;
+//                    NSString *verificationCode           = [url.path substringFromIndex:1];
+//                    [cvvc setVerificationCodeAndTryToVerify:verificationCode];
                     return YES;
                 } else {
                     DDLogWarn(@"Not the verification view controller we expected. Got %@ instead",
@@ -607,7 +609,7 @@ static NSTimeInterval launchStartedAt;
         // Avoid blocking app launch by putting all further possible DB access in async block
         dispatch_async(dispatch_get_main_queue(), ^{
             [TSSocketManager requestSocketOpen];
-            [[Environment current].contactsManager fetchSystemContactsOnceIfAlreadyAuthorized];
+            
             // This will fetch new messages, if we're using domain fronting.
             [[PushManager sharedManager] applicationDidBecomeActive];
 

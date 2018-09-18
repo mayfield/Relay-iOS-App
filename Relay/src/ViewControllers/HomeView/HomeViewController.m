@@ -267,6 +267,10 @@ NSString *const kArchivedConversationsReuseIdentifier = @"kArchivedConversations
 {
     [super loadView];
 
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        FLContactsManager.shared.refreshCCSMRecipients;
+    });
+    
     // TODO: Remove this.
     if (self.homeViewMode == HomeViewMode_Inbox) {
         [SignalApp.sharedApp setHomeViewController:self];
@@ -539,21 +543,25 @@ NSString *const kArchivedConversationsReuseIdentifier = @"kArchivedConversations
 
     DDLogInfo(@"%@ %s", self.logTag, __PRETTY_FUNCTION__);
 
-    NewContactThreadViewController *viewController = [NewContactThreadViewController new];
-
-    [self.contactsManager requestSystemContactsOnceWithCompletion:^(NSError *_Nullable error) {
-        if (error) {
-            DDLogError(@"%@ Error when requesting contacts: %@", self.logTag, error);
-        }
-        // Even if there is an error fetching contacts we proceed to the next screen.
-        // As the compose view will present the proper thing depending on contact access.
-        //
-        // We just want to make sure contact access is *complete* before showing the compose
-        // screen to avoid flicker.
-        OWSNavigationController *navigationController =
-            [[OWSNavigationController alloc] initWithRootViewController:viewController];
-        [self presentTopLevelModalViewController:navigationController animateDismissal:YES animatePresentation:YES];
-    }];
+    
+//    [self.contactsManager requestSystemContactsOnceWithCompletion:^(NSError *_Nullable error) {
+//        if (error) {
+//            DDLogError(@"%@ Error when requesting contacts: %@", self.logTag, error);
+//        }
+//        // Even if there is an error fetching contacts we proceed to the next screen.
+//        // As the compose view will present the proper thing depending on contact access.
+//        //
+//        // We just want to make sure contact access is *complete* before showing the compose
+//        // screen to avoid flicker.
+//        OWSNavigationController *navigationController =
+//            [[OWSNavigationController alloc] initWithRootViewController:viewController];
+//        [self presentTopLevelModalViewController:navigationController animateDismissal:YES animatePresentation:YES];
+//    }];
+    
+    NewConversationViewController *ncvc = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"NewConversationViewController"];
+    OWSNavigationController *navigationController =
+    [[OWSNavigationController alloc] initWithRootViewController:ncvc];
+    [self presentTopLevelModalViewController:navigationController animateDismissal:YES animatePresentation:YES];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -723,10 +731,10 @@ NSString *const kArchivedConversationsReuseIdentifier = @"kArchivedConversations
 {
     OWSAssertIsOnMainThread();
 
-    __block NSArray<ExperienceUpgrade *> *unseenUpgrades;
-    [self.uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-        unseenUpgrades = [ExperienceUpgradeFinder.sharedManager allUnseenWithTransaction:transaction];
-    }];
+    __block NSArray<ExperienceUpgrade *> *unseenUpgrades = NSArray.new;
+//    [self.uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+//        unseenUpgrades = [ExperienceUpgradeFinder.sharedManager allUnseenWithTransaction:transaction];
+//    }];
     return unseenUpgrades;
 }
 
@@ -734,17 +742,17 @@ NSString *const kArchivedConversationsReuseIdentifier = @"kArchivedConversations
 {
     OWSAssertIsOnMainThread();
 
-    NSArray<ExperienceUpgrade *> *unseenUpgrades = [self unseenUpgradeExperiences];
+//    NSArray<ExperienceUpgrade *> *unseenUpgrades = [self unseenUpgradeExperiences];
 
-    if (unseenUpgrades.count > 0) {
-        ExperienceUpgradesPageViewController *experienceUpgradeViewController =
-            [[ExperienceUpgradesPageViewController alloc] initWithExperienceUpgrades:unseenUpgrades];
-        [self presentViewController:experienceUpgradeViewController animated:YES completion:nil];
-    } else if (!self.hasBeenPresented && [ProfileViewController shouldDisplayProfileViewOnLaunch]) {
-        [ProfileViewController presentForUpgradeOrNag:self];
-    } else {
+//    if (unseenUpgrades.count > 0) {
+//        ExperienceUpgradesPageViewController *experienceUpgradeViewController =
+//            [[ExperienceUpgradesPageViewController alloc] initWithExperienceUpgrades:unseenUpgrades];
+//        [self presentViewController:experienceUpgradeViewController animated:YES completion:nil];
+//    } else if (!self.hasBeenPresented && [ProfileViewController shouldDisplayProfileViewOnLaunch]) {
+//        [ProfileViewController presentForUpgradeOrNag:self];
+//    } else {
         [OWSAlerts showIOSUpgradeNagIfNecessary];
-    }
+//    }
 
     self.hasBeenPresented = YES;
 }

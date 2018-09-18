@@ -51,10 +51,10 @@ NSString *const TSAccountManager_ServerSignalingKey = @"TSStorageServerSignaling
 
 @property (nonatomic, readonly) BOOL isRegistered;
 
-// This property is exposed publicly for testing purposes only.
-#ifndef DEBUG
-@property (nonatomic, nullable) NSString *phoneNumberAwaitingVerification;
-#endif
+//// This property is exposed publicly for testing purposes only.
+//#ifndef DEBUG
+//@property (nonatomic, nullable) NSString *phoneNumberAwaitingVerification;
+//#endif
 
 @property (nonatomic, nullable) NSString *cachedLocalUID;
 @property (nonatomic, nullable) NSString *cachedUsername;
@@ -130,37 +130,37 @@ NSString *const TSAccountManager_ServerSignalingKey = @"TSStorageServerSignaling
 - (BOOL)isRegistered
 {
     @synchronized (self) {
-        if (_isRegistered) {
-            return YES;
-        } else {
-            // Cache this once it's true since it's called alot, involves a dbLookup, and once set - it doesn't change.
+        // Cache this once it's true since it's called alot, involves a dbLookup, and once set - it doesn't change.
+        if (! _isRegistered) {
             _isRegistered = [self storedLocalUID];
             // FIXME: Maybe this is more correct?
-//            _isRegistered = ([self storedLocalUID] != nil && self.serverAuthToken.length > 0 && self.signalingKey.length > 0);
+            // _isRegistered = ([self storedLocalUID] != nil && self.serverAuthToken.length > 0 && self.signalingKey.length > 0);
         }
+        return _isRegistered;
     }
-    return _isRegistered;
 }
 
 - (void)finalizeRegistration
 {
     DDLogInfo(@"%@ didRegister", self.logTag);
-    NSString *phoneNumber = self.phoneNumberAwaitingVerification;
-
-    if (!phoneNumber) {
-        OWSRaiseException(@"RegistrationFail", @"Internal Corrupted State");
+    if (!self.isRegistered) {
+        NSString *phoneNumber = self.phoneNumberAwaitingVerification;
+        
+        if (!phoneNumber) {
+            OWSRaiseException(@"RegistrationFail", @"Internal Corrupted State");
+        }
+        
+        [self storeLocalUID:phoneNumber];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationNameAsync:RegistrationStateDidChangeNotification
+                                                                 object:nil
+                                                               userInfo:nil];
+        
+        // Warm these cached values.
+        [self isRegistered];
+        [self localUID];
+        [self isDeregistered];
     }
-
-    [self storeLocalUID:phoneNumber];
-
-    [[NSNotificationCenter defaultCenter] postNotificationNameAsync:RegistrationStateDidChangeNotification
-                                                             object:nil
-                                                           userInfo:nil];
-
-    // Warm these cached values.
-    [self isRegistered];
-    [self localUID];
-    [self isDeregistered];
 }
 
 +(nullable NSString *)username

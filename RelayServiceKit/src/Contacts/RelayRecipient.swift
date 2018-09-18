@@ -11,30 +11,38 @@ import YapDatabase
 @objc public class RelayRecipient: TSYapDatabaseObject {
     
     // Forsta additions - departure from Contact usage
-    @objc public var firstName = ""
-    @objc public var lastName = ""
-    @objc public var phoneNumber = ""
-    @objc public var email = ""
-    @objc public var notes = ""
+    @objc public var firstName: String?
+    @objc public var lastName: String?
+    @objc public var phoneNumber: String?
+    @objc public var email: String?
+    @objc public var notes: String?
     @objc public var flTag: FLTag?
     @objc public var avatar: UIImage?
-    @objc public var orgSlug = ""
-    @objc public var orgID = ""
-    @objc public var gravatarHash = ""
+    @objc public var orgSlug: String?
+    @objc public var orgID: String?
+    @objc public var gravatarHash: String?
     @objc public var gravatarImage: UIImage?
     @objc public var hiddenDate: Date?
     @objc public var isMonitor = false
     @objc public var isActive = false
     
-    fileprivate(set) var devices: NSOrderedSet?
+    fileprivate var _devices = NSOrderedSet()
+    @objc public var devices: NSOrderedSet {
+        get {
+            if _devices.count == 0 {
+                _devices = NSOrderedSet(object: NSNumber(value: 1) )
+            }
+            return _devices
+        }
+    }
 
     @objc public func fullName() -> String {
-        if firstName != "" && lastName != "" {
-            return "\(firstName) \(lastName)"
-        } else if lastName != "" {
-            return lastName
-        } else if firstName != "" {
-            return firstName
+        if firstName != nil && lastName != nil {
+            return "\(firstName!) \(lastName!)"
+        } else if lastName != nil {
+            return lastName!
+        } else if firstName != nil {
+            return firstName!
         } else {
             return "No Name"
         }
@@ -74,16 +82,16 @@ import YapDatabase
             }
 
             
-            recipient.firstName = userDict["first_name"] as! String
-            recipient.lastName = userDict["last_name"] as! String
-            recipient.email = userDict["email"] as! String
-            recipient.phoneNumber = userDict["phone"] as! String
-            recipient.gravatarHash = userDict["gravatar_hash"] as! String
+            recipient.firstName = userDict["first_name"] as? String
+            recipient.lastName = userDict["last_name"] as? String
+            recipient.email = userDict["email"] as? String
+            recipient.phoneNumber = userDict["phone"] as? String
+            recipient.gravatarHash = userDict["gravatar_hash"] as? String
             recipient.isMonitor = (Int(truncating: userDict["is_monitor"] as? NSNumber ?? 0)) == 1 ? true : false
             var orgDict = userDict["org"] as? [AnyHashable : Any]
             if orgDict != nil {
-                recipient.orgID = orgDict?["id"] as! String
-                recipient.orgSlug = orgDict?["slug"] as! String
+                recipient.orgID = orgDict?["id"] as? String
+                recipient.orgSlug = orgDict?["slug"] as? String
             } else {
                 Logger.debug("Missing orgDictionary for Recipient: \(String(describing: recipient.uniqueId))")
             }
@@ -95,7 +103,7 @@ import YapDatabase
                     recipient.flTag?.tagDescription = recipient.fullName()
                 }
                 if recipient.flTag?.orgSlug.count == 0 {
-                    recipient.flTag?.orgSlug = recipient.orgSlug
+                    recipient.flTag?.orgSlug = recipient.orgSlug!
                 }
 //                Environment.shared.contactsManager.saveTag(recipient?.flTag, withTransaction: transaction)
                 recipient.save(with: transaction)
@@ -185,21 +193,21 @@ import YapDatabase
         
         let recipient = RelayRecipient.init(uniqueId: uid)
         
-        if (TSAccountManager.localUID() == uid) {
-            // Default to no devices.
-            //
-            // This instance represents our own account and is used for sending
-            // sync message to linked devices.  We shouldn't have any linked devices
-            // yet when we create the "self" SignalRecipient, and we don't need to
-            // send sync messages to the primary - we ARE the primary.
-            recipient.devices = NSOrderedSet()
-        } else {
-            // Default to sending to just primary device.
-            //
-            // OWSMessageSender will correct this if it is wrong the next time
-            // we send a message to this recipient.
-            recipient.devices = NSOrderedSet(object: 1)
-        }
+//        if (TSAccountManager.localUID() == uid) {
+//            // Default to no devices.
+//            //
+//            // This instance represents our own account and is used for sending
+//            // sync message to linked devices.  We shouldn't have any linked devices
+//            // yet when we create the "self" SignalRecipient, and we don't need to
+//            // send sync messages to the primary - we ARE the primary.
+//            recipient.devices = NSOrderedSet()
+//        } else {
+//            // Default to sending to just primary device.
+//            //
+//            // OWSMessageSender will correct this if it is wrong the next time
+//            // we send a message to this recipient.
+//            recipient.devices = NSOrderedSet(object: 1)
+//        }
         return recipient
     }
 
@@ -210,16 +218,23 @@ import YapDatabase
             Logger.error("\(self.logTag) in \(#function) adding self as recipient device")
             return
         }
-        let updatedDevices: NSMutableOrderedSet? = self.devices?.mutableCopy() as? NSMutableOrderedSet
-        updatedDevices?.union(devices)
-        self.devices = updatedDevices
+        let updatedDevices: NSMutableOrderedSet = self.devices.mutableCopy() as! NSMutableOrderedSet
+        updatedDevices.union(devices)
+        _devices = updatedDevices
     }
     
     private func removeDevices(_ devices: NSOrderedSet) {
         assert(devices.count > 0)
-        let updatedDevices: NSMutableOrderedSet? = self.devices as? NSMutableOrderedSet
-        updatedDevices?.minus(devices)
-        self.devices = updatedDevices
+        
+        let updatedDevices = NSMutableOrderedSet.init(orderedSet: self.devices)
+
+        for device in devices {
+            updatedDevices.remove(device)
+        }
+        
+//        let updatedDevices = NSMutableOr÷deredSet.init(orderedSet: self.devices)
+//        updatedDevices.minus(devices)
+        _devices = updatedDevices.copy() as! NSOrderedSet
     }
 
     
@@ -229,9 +244,9 @@ import YapDatabase
             let contact2 = obj2 as? RelayRecipient
             let firstNameOrdering = false
             if firstNameOrdering {
-                return (contact1?.firstName.caseInsensitiveCompare(contact2?.firstName ?? ""))!
+                return (contact1?.firstName!.caseInsensitiveCompare(contact2?.firstName ?? ""))!
             } else {
-                return (contact1?.lastName.caseInsensitiveCompare(contact2?.lastName ?? ""))!
+                return (contact1?.lastName!.caseInsensitiveCompare(contact2?.lastName ?? ""))!
             }
         }
     }

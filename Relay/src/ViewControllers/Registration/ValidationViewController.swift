@@ -133,7 +133,7 @@ class ValidationViewController: UITableViewController {
     }
     
     private func proceedToMain() {
-        DispatchQueue.global(qos: .default).async {
+        DispatchQueue.global(qos: .background).async {
             TSSocketManager.requestSocketOpen()
             CCSMCommManager.refreshCCSMData()
         }
@@ -212,16 +212,16 @@ class ValidationViewController: UITableViewController {
     
     private func forgotPassword() {
         DispatchQueue.main.async {
-            let alert = UIAlertController(title: NSLocalizedString("RESETTING_PASSWORD", comment: ""), message: NSLocalizedString("ARE_YOU_SURE", comment: ""), preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: NSLocalizedString("NO", comment: ""), style: .default, handler: nil))
-            alert.addAction(UIAlertAction(title: NSLocalizedString("YES", comment: ""), style: .destructive, handler: { (action) in
+            let alert = UIAlertController(title: NSLocalizedString("RESET_PASSWORD", comment: ""), message: NSLocalizedString("RESET_PASSWORD_MESSAGE", comment: ""), preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .default, handler: nil))
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Proceed", comment: ""), style: .destructive, handler: { (action) in
                 
                 CCSMCommManager.requestPasswordReset(forUser: CCSMStorage.sharedInstance().getUserName(),
                                                      org: CCSMStorage.sharedInstance().getOrgName(),
                                                      completion: { (success, error) in
                                                         if success {
                                                             Logger.info("Password reset request successful sent.")
-                                                            self.presentAlertWithMessage(message: "Password reset request successful.\nPlease check your email or SMS for instructions.")
+                                                            self.presentAlertWithMessage(message: "Link Succesfully Sent\nPlease check your email or SMS for instructions.")
                                                         } else {
                                                             Logger.debug("Password reset request failed with error:\(String(describing: error?.localizedDescription))")
                                                             self.presentAlertWithMessage(message: "Password reset request failed.\n\(String(describing: error?.localizedDescription))")
@@ -251,13 +251,13 @@ class ValidationViewController: UITableViewController {
                     if err.domain == NSCocoaErrorDomain && err.code == NSUserActivityRemoteApplicationTimedOutError {
                         // Device provision timed out.
                         Logger.info("Device Autoprovisioning timed out.");
-                        let alert = UIAlertController(title: NSLocalizedString("REGISTRATION_ERROR", comment: ""),
-                                                      message: NSLocalizedString("PROVISION_FAILURE_MESSAGE", comment: ""),
+                        let alert = UIAlertController(title: NSLocalizedString("REGISTER_ERROR", comment: ""),
+                                                      message: NSLocalizedString("REGISTER_ERROR_MESSAGE", comment: ""),
                                                       preferredStyle: .alert)
                         alert.addAction(UIAlertAction(title: NSLocalizedString("TXT_CANCEL_TITLE", comment: ""),
                                                       style: .cancel,
                                                       handler: nil))
-                        alert.addAction(UIAlertAction(title: NSLocalizedString("TRY_AGAIN", comment: ""),
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("REGISTER_FAILED_TRY_AGAIN", comment: ""),
                                                       style: .default,
                                                       handler: { action in
                                                         self.onValidationButtonTap(sender: self)
@@ -265,10 +265,16 @@ class ValidationViewController: UITableViewController {
                         alert.addAction(UIAlertAction(title: NSLocalizedString("REGISTER_FAILED_FORCE_REGISTRATION", comment: ""),
                                                       style: .destructive,
                                                       handler: { action in
-                                                        let verifyAlert = UIAlertController(title: nil,
-                                                                                            message: NSLocalizedString("REGISTER_FORCE_VALIDATION", comment: ""),
+                                                        let verifyAlert = UIAlertController(title: NSLocalizedString("REGISTER_FORCE_VALIDATION_TITLE", comment: ""),
+                                                                                            message: NSLocalizedString("REGISTER_FORCE_VALIDATION_MESSAGE", comment: ""),
                                                                                             preferredStyle: .alert)
-                                                        verifyAlert.addAction(UIAlertAction(title:NSLocalizedString("YES", comment: ""),
+                                                        verifyAlert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""),
+                                                                                            style: .default,
+                                                                                            handler: { action in
+                                                                                                // User Bailed
+                                                                                                self.stopSpinner()
+                                                        }))
+                                                        verifyAlert.addAction(UIAlertAction(title:NSLocalizedString("Proceed", comment: ""),
                                                                                             style: .destructive,
                                                                                             handler: { action in
                                                                                                 self.startSpinner()
@@ -283,12 +289,6 @@ class ValidationViewController: UITableViewController {
                                                                                                         self.presentAlertWithMessage(message: "Forced provisioning failed.  Please try again.")
                                                                                                     }
                                                                                                 })
-                                                        }))
-                                                        verifyAlert.addAction(UIAlertAction(title: NSLocalizedString("NO", comment: ""),
-                                                                                            style: .default,
-                                                                                            handler: { action in
-                                                                                                // User Bailed
-                                                                                                self.stopSpinner()
                                                         }))
                                                         DispatchQueue.main.async {
                                                             self.navigationController?.present(verifyAlert, animated: true, completion: {

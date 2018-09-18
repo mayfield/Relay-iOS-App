@@ -67,7 +67,7 @@
     [CCSMCommManager checkAccountRegistrationWithCompletion:^(NSDictionary *payload, NSError *checkError) {
         if (checkError == nil) {
             NSString *serverURL = [payload objectForKey:@"serverUrl"];
-            [CCSMStorage.sharedInstance setTextSecureURL:serverURL];
+            CCSMStorage.sharedInstance.textSecureURLString = serverURL;
             NSArray *devices = [payload objectForKey:@"devices"];
             DDLogInfo(@"Provisioning found %d other registered devices.", (int)devices.count);
             
@@ -80,7 +80,7 @@
                 }];
             } else { // no other devices, register the account
                 [[NSNotificationCenter defaultCenter] postNotificationName:FLRegistrationStatusUpdateNotification
-                                                                    object:@{ @"message": @"Registering account..." }];
+                                                                    object:@{ @"message": @"Registering device..." }];
                 [self registerAcountWithCompletion:^(NSError * _Nullable registerError) {
                     completionBlock(registerError);
                 }];
@@ -268,7 +268,7 @@
 // MARK: - Helpers
 -(NSURL *)provisioningURL
 {
-    NSString *tssURLString = [CCSMStorage.sharedInstance textSecureURL];
+    NSString *tssURLString = CCSMStorage.sharedInstance.textSecureURLString;
     NSString *socketString = [tssURLString stringByReplacingOccurrencesOfString:@"http"
                                                                      withString:@"ws"];
     NSString *urlString = [socketString stringByAppendingString:@"/v1/websocket/provisioning/"];
@@ -321,7 +321,7 @@
             OWSProvisioningProtosProvisioningUuid *proto = [OWSProvisioningProtosProvisioningUuid parseFromData:request.body];
             [self sendWebSocketMessageAcknowledgement:request];
             [[NSNotificationCenter defaultCenter] postNotificationName:FLRegistrationStatusUpdateNotification
-                                                                object:@{ @"message": @"Requesting device provisioning.  Awaiting response..." }];
+                                                                object:@{ @"message": @"Looking for an existing device..." }];
             NSDictionary *payload = @{ @"uuid" : proto.uuid,
                                        @"key" : ourPublicKeyString };
             
