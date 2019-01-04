@@ -20,6 +20,9 @@ dependencies: update_dependencies
 build: dependencies
 	$(XCODE_BUILD) build | xcpretty
 
+litebuild:
+	$(XCODE_BUILD) build | xcpretty
+
 test:
 	bundle exec fastlane scan
 	cd SignalServiceKit && make test

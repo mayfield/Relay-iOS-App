@@ -3,7 +3,7 @@
 //
 
 import XCTest
-@testable import Signal
+@testable import Relay
 @testable import RelayMessaging
 
 @objc
@@ -125,18 +125,20 @@ class ConversationSearcherTest: XCTestCase {
         TextSecureKitEnv.setShared(testEnvironment)
 
         self.dbConnection.readWrite { transaction in
-            let bookModel = TSGroupModel(title: "Book Club", memberIds: [aliceRecipientId, bobRecipientId], image: nil, groupId: Randomness.generateRandomBytes(16))
-            let bookClubGroupThread = TSGroupThread.getOrCreateThread(with: bookModel, transaction: transaction)
-            self.bookClubThread = ThreadViewModel(thread: bookClubGroupThread, transaction: transaction)
+            // new
+            let bookClubThread = TSThread.getOrCreateThread(withParticipants: [aliceRecipientId, bobRecipientId], transaction: transaction)
+            bookClubThread.title = "Book Club"
 
-            let snackModel = TSGroupModel(title: "Snack Club", memberIds: [aliceRecipientId], image: nil, groupId: Randomness.generateRandomBytes(16))
-            let snackClubGroupThread = TSGroupThread.getOrCreateThread(with: snackModel, transaction: transaction)
-            self.snackClubThread = ThreadViewModel(thread: snackClubGroupThread, transaction: transaction)
+            self.bookClubThread = ThreadViewModel(thread: bookClubThread, transaction: transaction)
 
-            let aliceContactThread = TSThread.getOrCreateThread(withContactId: aliceRecipientId, transaction: transaction)
+            let snackClubThread = TSThread.getOrCreateThread(withParticipants: [aliceRecipientId], transaction: transaction)
+            snackClubThread.title = "Snack Club"
+            self.snackClubThread = ThreadViewModel(thread: snackClubThread, transaction: transaction)
+
+            let aliceContactThread = TSThread.getOrCreateThread(withParticipants: [aliceRecipientId], transaction: transaction)
             self.aliceThread = ThreadViewModel(thread: aliceContactThread, transaction: transaction)
 
-            let bobContactThread = TSThread.getOrCreateThread(withContactId: bobRecipientId, transaction: transaction)
+            let bobContactThread = TSThread.getOrCreateThread(withParticipants: [bobRecipientId], transaction: transaction)
             self.bobEmptyThread = ThreadViewModel(thread: bobContactThread, transaction: transaction)
 
             let helloAlice = TSOutgoingMessage(in: aliceContactThread, messageBody: "Hello Alice", attachmentId: nil)
@@ -145,16 +147,16 @@ class ConversationSearcherTest: XCTestCase {
             let goodbyeAlice = TSOutgoingMessage(in: aliceContactThread, messageBody: "Goodbye Alice", attachmentId: nil)
             goodbyeAlice.save(with: transaction)
 
-            let helloBookClub = TSOutgoingMessage(in: bookClubGroupThread, messageBody: "Hello Book Club", attachmentId: nil)
+            let helloBookClub = TSOutgoingMessage(in: bookClubThread, messageBody: "Hello Book Club", attachmentId: nil)
             helloBookClub.save(with: transaction)
 
-            let goodbyeBookClub = TSOutgoingMessage(in: bookClubGroupThread, messageBody: "Goodbye Book Club", attachmentId: nil)
+            let goodbyeBookClub = TSOutgoingMessage(in: bookClubThread, messageBody: "Goodbye Book Club", attachmentId: nil)
             goodbyeBookClub.save(with: transaction)
 
-            let bobsPhoneNumber = TSOutgoingMessage(in: bookClubGroupThread, messageBody: "My phone number is: 321-321-4321", attachmentId: nil)
+            let bobsPhoneNumber = TSOutgoingMessage(in: bookClubThread, messageBody: "My phone number is: 321-321-4321", attachmentId: nil)
             bobsPhoneNumber.save(with: transaction)
 
-            let bobsFaxNumber = TSOutgoingMessage(in: bookClubGroupThread, messageBody: "My fax is: 222-333-4444", attachmentId: nil)
+            let bobsFaxNumber = TSOutgoingMessage(in: bookClubThread, messageBody: "My fax is: 222-333-4444", attachmentId: nil)
             bobsFaxNumber.save(with: transaction)
         }
     }

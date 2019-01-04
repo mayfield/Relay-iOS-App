@@ -6,7 +6,6 @@ import Foundation
 import PromiseKit
 import RelayServiceKit
 
-@objc(OWSSessionResetJob)
 public class SessionResetJob: NSObject {
 
     let TAG = "SessionResetJob"
